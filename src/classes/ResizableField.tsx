@@ -1,0 +1,159 @@
+import { each, uniqueId } from "lodash-es";
+import { action, makeObservable, observable } from "mobx";
+import React, { ReactElement } from "react";
+import { FieldElement, Handle } from "../components";
+
+class ResizableField {
+	width: number = 500;
+	height: number = 300;
+	dragging: boolean = false;
+	resizeHandles: Array<{ position: string; element: ReactElement }> = [
+		{
+			position: "top-left",
+			element: <React.Component />,
+		},
+		{
+			position: "top-right",
+			element: <React.Component />,
+		},
+		{
+			position: "bottom-left",
+			element: <React.Component />,
+		},
+		{
+			position: "bottom-right",
+			element: <React.Component />,
+		},
+	];
+	resizingPosition?: string = "";
+	fieldElement: ReactElement = (<React.Component />);
+	dragStartX: number = 0;
+	dragStartY: number = 0;
+	fieldRef: HTMLDivElement;
+	wrapperRef: HTMLDivElement;
+	currentHandle: HTMLDivElement;
+
+	constructor() {
+		makeObservable(this, {
+			width: observable,
+			height: observable,
+			setWidth: action,
+			setHeight: action,
+		});
+		this.initializeHandles();
+		this.initializeFieldElement();
+	}
+
+	initializeHandles() {
+		each(
+			this.resizeHandles,
+			(handle) =>
+				(handle.element = (
+					<Handle
+						key={uniqueId()}
+						className={`resize-handle  ${handle.position}`}
+						onMouseDown={this.onMouseDown}
+						position={handle.position}
+						setRef={(ref) => (this.currentHandle = ref)}
+					/>
+				))
+		);
+	}
+
+	initializeFieldElement() {
+		this.fieldElement = (
+			<FieldElement
+				key={uniqueId()}
+				resizeHandles={this.resizeHandles}
+				setWrapperRef={(ref) => (this.wrapperRef = ref)}
+				setRef={(ref) => (this.fieldRef = ref)}
+				onMouseDown={this.onMouseDown}
+			/>
+		);
+	}
+
+	setDragging = (dragging: boolean) => (this.dragging = dragging);
+
+	onMouseUp = () => {
+		this.setDragging(false);
+		this.dragStartX = 0;
+		this.dragStartY = 0;
+		document.removeEventListener(
+			"mousemove",
+			this.resizingPosition ? this.onResize : this.onDrag
+		);
+		document.removeEventListener("mouseup", this.onMouseUp);
+		this.resizingPosition = undefined;
+	};
+
+	onMouseDown = (event: Event, position: string) => {
+		if (this.resizingPosition && this.dragging) return;
+		this.resizingPosition = position;
+		this.dragStartX = event.nativeEvent.offsetX;
+		this.dragStartY = event.nativeEvent.offsetY;
+		this.setDragging(true);
+		document.addEventListener(
+			"mousemove",
+			position ? this.onResize : this.onDrag
+		);
+		document.addEventListener("mouseup", this.onMouseUp);
+	};
+
+	onDrag = (event: MouseEvent) => {
+		if (!this.wrapperRef) return;
+		this.setPosition(
+			event.pageY - this.dragStartY,
+			event.pageX - this.dragStartX
+		);
+	};
+
+	onResize = (event: MouseEvent) => {
+		if (this.fieldRef) {
+			const rect = this.fieldRef.getBoundingClientRect();
+			switch (this.resizingPosition) {
+				case "top-left":
+					this.setDimensions(
+						rect.width - event.movementX,
+						rect.height - event.movementY
+					);
+					break;
+				case "top-right":
+					this.setDimensions(
+						rect.width + event.movementX,
+						rect.height - event.movementY
+					);
+					break;
+				case "bottom-left":
+					this.setDimensions(
+						rect.width - event.movementX,
+						rect.height + event.movementY
+					);
+					break;
+				case "bottom-right":
+					this.setDimensions(
+						rect.width + event.movementX,
+						rect.height + event.movementY
+					);
+					break;
+				default:
+					break;
+			}
+		}
+	};
+
+	setPosition(newTop: number, newLeft: number) {
+		this.fieldRef.style.top = `${newTop}px`;
+		this.fieldRef.style.left = `${newLeft}px`;
+	}
+
+	setDimensions(newWidth: number, newHeight: number) {
+		this.fieldRef.style.width = `${newWidth}px`;
+		this.fieldRef.style.height = `${newHeight}px`;
+	}
+
+	setHeight = (height: number) => (this.height = height);
+
+	setWidth = (width: number) => (this.width = width);
+}
+
+export default ResizableField;
