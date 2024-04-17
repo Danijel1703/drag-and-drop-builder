@@ -2,6 +2,7 @@ import { map } from "lodash-es";
 import { action, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import { ResizableField } from "./classes";
+import React from "react";
 
 class DragAndDropStore {
 	resizableFields: Array<ResizableField> = [];
@@ -28,10 +29,10 @@ const App = observer(() => {
 	const { createResizableField, resizableFields } = store;
 
 	return (
-		<div id="playground">
+		<React.Fragment>
 			{map(resizableFields, (field) => field.fieldElement)}
 			<button onClick={createResizableField}>Create Field</button>
-		</div>
+		</React.Fragment>
 	);
 });
 

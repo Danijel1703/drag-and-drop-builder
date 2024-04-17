@@ -3,16 +3,6 @@ body {
 	padding: 0;
 }
 
-#playground {
-    width: 100vw;
-    height: 100vh;
-    position: relative;
-}
-
-.resizable-field-wrapper {
-    position: absolute;
-}
-
 .resizable-field {
 	position: absolute;
 	width: 200px;
@@ -25,25 +15,28 @@ body {
 	width: 10px;
 	height: 10px;
 	background-color: darkblue;
-	cursor: pointer;
 }
 
 .top-left {
-	top: 0;
-	left: 0;
+	top: -5px;
+	left: -5px;
+	cursor: nw-resize;
 }
 
 .top-right {
-	top: 0;
-	right: 0;
+	top: -5px;
+	right: -5px;
+	cursor: ne-resize;
 }
 
 .bottom-left {
-	bottom: 0;
-	left: 0;
+	bottom: -5px;
+	left: -5px;
+	cursor: sw-resize;
 }
 
 .bottom-right {
-	bottom: 0;
-	right: 0;
+	bottom: -5px;
+	right: -5px;
+	cursor: se-resize;
 }

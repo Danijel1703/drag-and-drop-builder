@@ -1,4 +1,4 @@
-import { each, first, uniqueId } from "lodash-es";
+import { each, first, round, uniqueId } from "lodash-es";
 import { action, makeObservable, observable } from "mobx";
 import React, { ReactElement, version } from "react";
 import { FieldElement, Handle } from "../components";
@@ -6,7 +6,7 @@ import { FieldElement, Handle } from "../components";
 class ResizableField {
 	width: number = 500;
 	height: number = 300;
-	dragging: boolean = false;
+	isResizing: boolean = false;
 	resizeHandles: Array<{ position: string; element: ReactElement }> = [
 		{
 			position: "top-left",
@@ -29,10 +29,7 @@ class ResizableField {
 	fieldElement: ReactElement = (<React.Component />);
 	dragStartX: number = 0;
 	dragStartY: number = 0;
-	resizeStartX: number = 0;
-	resizeStartY: number = 0;
 	fieldRef: HTMLDivElement;
-	wrapperRef: HTMLDivElement;
 	currentHandle?: HTMLDivElement;
 
 	constructor() {
@@ -49,7 +46,7 @@ class ResizableField {
 					<Handle
 						key={uniqueId()}
 						className={`resize-handle  ${handle.position}`}
-						onMouseDown={this.onMouseDown}
+						onMouseDown={this.onResizeStart}
 						position={handle.position}
 					/>
 				))
@@ -61,95 +58,88 @@ class ResizableField {
 			<FieldElement
 				key={uniqueId()}
 				resizeHandles={this.resizeHandles}
-				setWrapperRef={(ref) => (this.wrapperRef = ref)}
 				setRef={(ref) => (this.fieldRef = ref)}
-				onMouseDown={this.onMouseDown}
+				onMouseDown={this.onDragStart}
 			/>
 		);
 	}
 
-	setDragging = (dragging: boolean) => (this.dragging = dragging);
-
 	onMouseUp = () => {
-		this.setDragging(false);
+		document.removeEventListener("mousemove", this.onResize);
+		document.removeEventListener("mousemove", this.onDrag);
+		this.setIsResizing(false);
 		this.dragStartX = 0;
 		this.dragStartY = 0;
-		document.removeEventListener(
-			"mousemove",
-			this.resizingPosition ? this.onResize : this.onDrag
-		);
-		document.removeEventListener("mouseup", this.onMouseUp);
 		this.resizingPosition = undefined;
 	};
 
-	onMouseDown = (event: Event, position: string) => {
-		if (this.resizingPosition && this.dragging) return;
+	onResizeStart = (event: Event, position: string) => {
+		this.setIsResizing(true);
 		this.resizingPosition = position;
-		this.dragStartX = event.nativeEvent.offsetX;
-		this.dragStartY = event.nativeEvent.offsetY;
-		this.resizeStartX = event.nativeEvent.pageX;
-		this.resizeStartY = event.nativeEvent.pageY;
-		if (position) {
-			this.currentHandle = event.nativeEvent.target;
-		}
-		this.setDragging(true);
-		document.addEventListener(
-			"mousemove",
-			position ? this.onResize : this.onDrag
-		);
+		this.currentHandle = event.nativeEvent.target;
+		document.addEventListener("mousemove", this.onResize);
 		document.addEventListener("mouseup", this.onMouseUp);
 	};
 
+	setIsResizing = (isResizing: boolean) => (this.isResizing = isResizing);
+
 	onDrag = (event: MouseEvent) => {
-		if (!this.wrapperRef) return;
+		if (this.isResizing) return;
 		this.setPosition(
-			event.pageY - this.dragStartY,
-			event.pageX - this.dragStartX
+			event.pageX - this.dragStartX,
+			event.pageY - this.dragStartY
 		);
+	};
+
+	onDragStart = (event: Event) => {
+		this.dragStartX = event.nativeEvent.offsetX;
+		this.dragStartY = event.nativeEvent.offsetY;
+		document.addEventListener("mousemove", this.onDrag);
+		document.addEventListener("mouseup", this.onMouseUp);
 	};
 
 	onResize = (event: MouseEvent) => {
 		if (this.fieldRef) {
 			const rect = this.fieldRef.getBoundingClientRect();
 			switch (this.resizingPosition) {
-				case "top-left":
+				case "top-left": {
+					const diffX = rect.width - (rect.width - event.movementX);
+					const diffY = rect.height - (rect.height - event.movementY);
 					this.setDimensions(
 						rect.width - event.movementX,
 						rect.height - event.movementY
 					);
-					this.setPosition(
-						this.resizeStartY -
-							(this.resizeStartY - event.pageY) -
-							this.dragStartY,
-						this.resizeStartX -
-							(this.resizeStartX - event.pageX) -
-							this.dragStartX
-					);
+					let y = rect.top + diffY;
+					let x = rect.left + diffX;
+					if (x > rect.right) {
+						x = rect.left;
+					}
+					if (y > rect.bottom) {
+						y = rect.top;
+					}
+					this.setPosition(x, y);
 					break;
-				case "top-right":
+				}
+				case "top-right": {
+					const diff = rect.height - (rect.height - event.movementY);
 					this.setDimensions(
 						rect.width + event.movementX,
 						rect.height - event.movementY
 					);
-					this.setPosition(
-						this.resizeStartY -
-							(this.resizeStartY - event.pageY) -
-							this.dragStartY,
-						rect.left
-					);
+					const y = rect.top + diff;
+					if (y < rect.bottom) this.setPosition(rect.x, y);
 					break;
-				case "bottom-left":
+				}
+				case "bottom-left": {
+					const diff = rect.width - (rect.width - event.movementX);
 					this.setDimensions(
 						rect.width - event.movementX,
 						rect.height + event.movementY
 					);
-					this.setPosition(
-						rect.top,
-						this.resizeStartX -
-							(this.resizeStartX - event.pageX) -
-							this.dragStartX
-					);
+					const x = rect.left + diff;
+					if (x < rect.right) this.setPosition(x, rect.top);
 					break;
+				}
 				case "bottom-right":
 					this.setDimensions(
 						rect.width + event.movementX,
@@ -169,23 +159,17 @@ class ResizableField {
 		return !(this.width < minWidth * 2) && !(minHeight * 2 > this.height);
 	}
 
-	setPosition(newTop: number, newLeft: number) {
-		console.log(this.currentHandle);
-		if (this.currentHandle && !this.canUpdate()) return;
-		this.fieldRef.style.top = `${newTop}px`;
-		this.fieldRef.style.left = `${newLeft}px`;
+	setPosition(newLeft: number, newTop: number) {
+		newLeft = round(newLeft);
+		newTop = round(newTop);
+		this.fieldRef.style.transform = `translate(${newLeft}px, ${newTop}px)`;
 	}
 
 	setDimensions(newWidth: number, newHeight: number) {
-		const oldWith = this.width;
-		const oldHeight = this.height;
-		this.setWidth(oldWith);
+		newWidth = round(newWidth);
+		newHeight = round(newHeight);
+		this.setWidth(newWidth);
 		this.setHeight(newHeight);
-		if (!this.canUpdate()) {
-			this.setWidth(newWidth);
-			this.setHeight(oldHeight);
-			return;
-		}
 		this.fieldRef.style.width = `${newWidth}px`;
 		this.fieldRef.style.height = `${newHeight}px`;
 	}

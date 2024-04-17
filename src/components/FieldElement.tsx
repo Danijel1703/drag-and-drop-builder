@@ -19,13 +19,11 @@ class FieldElement extends React.Component<TFieldElementProps> {
 	render() {
 		return (
 			<div
-				className="resizable-field-wrapper"
-				ref={(ref) => this.props.setWrapperRef(ref)}
+				className="resizable-field"
 				onMouseDown={this.props.onMouseDown}
+				ref={(ref) => this.props.setRef(ref)}
 			>
-				<div className="resizable-field" ref={(ref) => this.props.setRef(ref)}>
-					{map(this.props.resizeHandles, (handle) => handle.element)}
-				</div>
+				{map(this.props.resizeHandles, (handle) => handle.element)}
 			</div>
 		);
 	}
