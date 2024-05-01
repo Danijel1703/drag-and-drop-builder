@@ -1,4 +1,4 @@
-import { map, uniqueId } from "lodash-es";
+import { map } from "lodash-es";
 import React, { MouseEventHandler, ReactElement } from "react";
 
 type TResizeHandles = {

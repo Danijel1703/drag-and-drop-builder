@@ -1,6 +1,5 @@
-import { each, first, round, uniqueId } from "lodash-es";
-import { action, makeObservable, observable } from "mobx";
-import React, { ReactElement, version } from "react";
+import { each, round, uniqueId } from "lodash-es";
+import React, { ReactElement } from "react";
 import { FieldElement, Handle } from "../components";
 
 class ResizableField {
@@ -24,6 +23,22 @@ class ResizableField {
 			position: "bottom-right",
 			element: <React.Component />,
 		},
+		{
+			position: "top",
+			element: <React.Component />,
+		},
+		{
+			position: "bottom",
+			element: <React.Component />,
+		},
+		{
+			position: "right",
+			element: <React.Component />,
+		},
+		{
+			position: "left",
+			element: <React.Component />,
+		},
 	];
 	resizingPosition?: string = "";
 	fieldElement: ReactElement = (<React.Component />);
@@ -33,7 +48,6 @@ class ResizableField {
 	currentHandle?: HTMLDivElement;
 
 	constructor() {
-		makeObservable(this);
 		this.initializeHandles();
 		this.initializeFieldElement();
 	}
@@ -146,6 +160,29 @@ class ResizableField {
 						rect.height + event.movementY
 					);
 					break;
+				case "top": {
+					const diff = rect.height - (rect.height - event.movementY);
+					this.setDimensions(rect.width, rect.height - event.movementY);
+					const y = rect.top + diff;
+					if (y < rect.bottom) this.setPosition(rect.x, y);
+					break;
+				}
+				case "bottom":
+					this.setDimensions(rect.width, rect.height + event.movementY);
+					break;
+				case "left": {
+					const diff = rect.width - (rect.width - event.movementX);
+					this.setDimensions(rect.width - event.movementX, rect.height);
+					const x = rect.left + diff;
+					if (x < rect.right) this.setPosition(x, rect.top);
+					break;
+				}
+				case "right":
+					this.setDimensions(
+						rect.width + event.movementX,
+						rect.height + event.movementY
+					);
+					break;
 				default:
 					break;
 			}
@@ -166,8 +203,17 @@ class ResizableField {
 	}
 
 	setDimensions(newWidth: number, newHeight: number) {
-		newWidth = round(newWidth);
-		newHeight = round(newHeight);
+		const [top, right, bottom, left] = getComputedStyle(
+			this.fieldRef
+		).borderWidth.match(/\d+/g);
+		const borderLeft = Number(left) ? left : 0;
+		const borderRight = Number(right) ? right : 0;
+		const borderTop = Number(top) ? top : 0;
+		const borderBottom = Number(bottom) ? bottom : 0;
+		const borderWidth = borderLeft - borderRight;
+		const borderHeight = borderTop - borderBottom;
+		newWidth = round(newWidth) - borderWidth;
+		newHeight = round(newHeight) - borderHeight;
 		this.setWidth(newWidth);
 		this.setHeight(newHeight);
 		this.fieldRef.style.width = `${newWidth}px`;
