@@ -5,6 +5,8 @@ import { FieldElement, Handle } from "../components";
 class ResizableField {
 	width: number = 500;
 	height: number = 300;
+	x: number = 0;
+	y: number = 0;
 	isResizing: boolean = false;
 	resizeHandles: Array<{ position: string; element: ReactElement }> = [
 		{
@@ -113,79 +115,78 @@ class ResizableField {
 	};
 
 	onResize = (event: MouseEvent) => {
-		if (this.fieldRef) {
-			const rect = this.fieldRef.getBoundingClientRect();
-			switch (this.resizingPosition) {
-				case "top-left": {
-					const diffX = rect.width - (rect.width - event.movementX);
-					const diffY = rect.height - (rect.height - event.movementY);
-					this.setDimensions(
-						rect.width - event.movementX,
-						rect.height - event.movementY
-					);
-					let y = rect.top + diffY;
-					let x = rect.left + diffX;
-					if (x > rect.right) {
-						x = rect.left;
-					}
-					if (y > rect.bottom) {
-						y = rect.top;
-					}
-					this.setPosition(x, y);
-					break;
+		if (!this.fieldRef) return;
+		const rect = this.fieldRef.getBoundingClientRect();
+		switch (this.resizingPosition) {
+			case "top-left": {
+				const diffX = rect.width - (rect.width - event.movementX);
+				const diffY = rect.height - (rect.height - event.movementY);
+				this.setDimensions(
+					rect.width - event.movementX,
+					rect.height - event.movementY
+				);
+				let y = rect.top + diffY;
+				let x = rect.left + diffX;
+				if (x > rect.right) {
+					x = rect.left;
 				}
-				case "top-right": {
-					const diff = rect.height - (rect.height - event.movementY);
-					this.setDimensions(
-						rect.width + event.movementX,
-						rect.height - event.movementY
-					);
-					const y = rect.top + diff;
-					if (y < rect.bottom) this.setPosition(rect.x, y);
-					break;
+				if (y > rect.bottom) {
+					y = rect.top;
 				}
-				case "bottom-left": {
-					const diff = rect.width - (rect.width - event.movementX);
-					this.setDimensions(
-						rect.width - event.movementX,
-						rect.height + event.movementY
-					);
-					const x = rect.left + diff;
-					if (x < rect.right) this.setPosition(x, rect.top);
-					break;
-				}
-				case "bottom-right":
-					this.setDimensions(
-						rect.width + event.movementX,
-						rect.height + event.movementY
-					);
-					break;
-				case "top": {
-					const diff = rect.height - (rect.height - event.movementY);
-					this.setDimensions(rect.width, rect.height - event.movementY);
-					const y = rect.top + diff;
-					if (y < rect.bottom) this.setPosition(rect.x, y);
-					break;
-				}
-				case "bottom":
-					this.setDimensions(rect.width, rect.height + event.movementY);
-					break;
-				case "left": {
-					const diff = rect.width - (rect.width - event.movementX);
-					this.setDimensions(rect.width - event.movementX, rect.height);
-					const x = rect.left + diff;
-					if (x < rect.right) this.setPosition(x, rect.top);
-					break;
-				}
-				case "right":
-					this.setDimensions(
-						rect.width + event.movementX,
-						rect.height + event.movementY
-					);
-					break;
-				default:
-					break;
+				this.setPosition(x, y);
+				break;
 			}
+			case "top-right": {
+				const diff = rect.height - (rect.height - event.movementY);
+				this.setDimensions(
+					rect.width + event.movementX,
+					rect.height - event.movementY
+				);
+				const y = rect.top + diff;
+				if (y < rect.bottom) this.setPosition(rect.x, y);
+				break;
+			}
+			case "bottom-left": {
+				const diff = rect.width - (rect.width - event.movementX);
+				this.setDimensions(
+					rect.width - event.movementX,
+					rect.height + event.movementY
+				);
+				const x = rect.left + diff;
+				if (x < rect.right) this.setPosition(x, rect.top);
+				break;
+			}
+			case "bottom-right":
+				this.setDimensions(
+					rect.width + event.movementX,
+					rect.height + event.movementY
+				);
+				break;
+			case "top": {
+				const diff = rect.height - (rect.height - event.movementY);
+				this.setDimensions(rect.width, rect.height - event.movementY);
+				const y = rect.top + diff;
+				if (y < rect.bottom) this.setPosition(rect.x, y);
+				break;
+			}
+			case "bottom":
+				this.setDimensions(rect.width, rect.height + event.movementY);
+				break;
+			case "left": {
+				const diff = rect.width - (rect.width - event.movementX);
+				this.setDimensions(rect.width - event.movementX, rect.height);
+				const x = rect.left + diff;
+				if (x < rect.right) this.setPosition(x, rect.top);
+				break;
+			}
+			case "right":
+				this.setDimensions(
+					rect.width + event.movementX,
+					rect.height + event.movementY
+				);
+				break;
+			default:
+				break;
 		}
 	};
 
@@ -197,9 +198,9 @@ class ResizableField {
 	}
 
 	setPosition(newLeft: number, newTop: number) {
-		newLeft = round(newLeft);
-		newTop = round(newTop);
-		this.fieldRef.style.transform = `translate(${newLeft}px, ${newTop}px)`;
+		this.x = round(newLeft);
+		this.y = round(newTop);
+		this.fieldRef.style.transform = `translate(${this.x}px, ${this.y}px)`;
 	}
 
 	setDimensions(newWidth: number, newHeight: number) {

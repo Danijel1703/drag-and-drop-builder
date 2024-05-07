@@ -18,56 +18,64 @@ body {
 }
 
 .top {
+	background-color: #3E9AF0;
 	width: calc(100% - 10px);
-	height: 10px;
+	height: 2.5px;
 	left: 5px;
-	top: -5px;
+	top: -2.5px;
 	cursor: row-resize;
 }
 
 .left {
+	background-color: #3E9AF0;
+	width: 2.5px;
 	height: calc(100% - 10px);
-	width: 10px;
 	top: 5px;
-	left: -5px;
+	left: -2.5px;
 	cursor: col-resize;
 }
 
 .right {
+	background-color: #3E9AF0;
+	width: 2.5px;
 	height: calc(100% - 10px);
-	width: 10px;
 	top: 5px;
-	right: -5px;
+	left: calc(100% - 2.5px);
 	cursor: col-resize;
 }
 
 .bottom {
+	background-color: #3E9AF0;
 	width: calc(100% - 10px);
-	height: 10px;
+	height: 2.5px;
 	left: 5px;
-	bottom: -5px;
+	top: calc(100% - 2.5px);
 	cursor: row-resize;
 }
 
 .top-left {
+	background-color: #3E9AF0;
 	top: -5px;
 	left: -5px;
 	cursor: nw-resize;
 }
 
 .top-right {
+	background-color: #3E9AF0;
 	top: -5px;
 	right: -5px;
 	cursor: ne-resize;
 }
 
 .bottom-left {
+	background-color: #3E9AF0;
 	bottom: -5px;
 	left: -5px;
 	cursor: sw-resize;
 }
 
 .bottom-right {
+	background-color: #3E9AF0;
 	bottom: -5px;
 	right: -5px;
 	cursor: se-resize;
