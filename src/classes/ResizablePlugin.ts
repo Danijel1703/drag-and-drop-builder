@@ -1,91 +1,23 @@
-import { each, round, uniqueId } from "lodash-es";
-import React, { ReactElement } from "react";
-import { FieldElement, Handle } from "../components";
+import { round } from "lodash-es";
+import { TResizablePlugin } from "../types";
 
-class ResizableField {
+class ResizablePlugin implements TResizablePlugin {
 	width: number = 500;
 	height: number = 300;
 	x: number = 0;
 	y: number = 0;
 	isResizing: boolean = false;
-	resizeHandles: Array<{ position: string; element: ReactElement }> = [
-		{
-			position: "top-left",
-			element: <React.Component />,
-		},
-		{
-			position: "top-right",
-			element: <React.Component />,
-		},
-		{
-			position: "bottom-left",
-			element: <React.Component />,
-		},
-		{
-			position: "bottom-right",
-			element: <React.Component />,
-		},
-		{
-			position: "top",
-			element: <React.Component />,
-		},
-		{
-			position: "bottom",
-			element: <React.Component />,
-		},
-		{
-			position: "right",
-			element: <React.Component />,
-		},
-		{
-			position: "left",
-			element: <React.Component />,
-		},
-	];
 	resizingPosition?: string = "";
-	fieldElement: ReactElement = (<React.Component />);
-	dragStartX: number = 0;
-	dragStartY: number = 0;
-	fieldRef: HTMLDivElement;
 	currentHandle?: HTMLDivElement;
+	resizableRef: HTMLElement;
 
-	constructor() {
-		this.initializeHandles();
-		this.initializeFieldElement();
-	}
-
-	initializeHandles() {
-		each(
-			this.resizeHandles,
-			(handle) =>
-				(handle.element = (
-					<Handle
-						key={uniqueId()}
-						className={`resize-handle  ${handle.position}`}
-						onMouseDown={this.onResizeStart}
-						position={handle.position}
-					/>
-				))
-		);
-	}
-
-	initializeFieldElement() {
-		this.fieldElement = (
-			<FieldElement
-				key={uniqueId()}
-				resizeHandles={this.resizeHandles}
-				setRef={(ref) => (this.fieldRef = ref)}
-				onMouseDown={this.onDragStart}
-			/>
-		);
-	}
+	setResizableRef = (ref: HTMLElement) => {
+		this.resizableRef = ref;
+	};
 
 	onMouseUp = () => {
 		document.removeEventListener("mousemove", this.onResize);
-		document.removeEventListener("mousemove", this.onDrag);
 		this.setIsResizing(false);
-		this.dragStartX = 0;
-		this.dragStartY = 0;
 		this.resizingPosition = undefined;
 	};
 
@@ -99,24 +31,9 @@ class ResizableField {
 
 	setIsResizing = (isResizing: boolean) => (this.isResizing = isResizing);
 
-	onDrag = (event: MouseEvent) => {
-		if (this.isResizing) return;
-		this.setPosition(
-			event.pageX - this.dragStartX,
-			event.pageY - this.dragStartY
-		);
-	};
-
-	onDragStart = (event: Event) => {
-		this.dragStartX = event.nativeEvent.offsetX;
-		this.dragStartY = event.nativeEvent.offsetY;
-		document.addEventListener("mousemove", this.onDrag);
-		document.addEventListener("mouseup", this.onMouseUp);
-	};
-
 	onResize = (event: MouseEvent) => {
-		if (!this.fieldRef) return;
-		const rect = this.fieldRef.getBoundingClientRect();
+		if (!this.resizableRef) return;
+		const rect = this.resizableRef.getBoundingClientRect();
 		switch (this.resizingPosition) {
 			case "top-left": {
 				const diffX = rect.width - (rect.width - event.movementX);
@@ -197,15 +114,9 @@ class ResizableField {
 		return !(this.width < minWidth * 2) && !(minHeight * 2 > this.height);
 	}
 
-	setPosition(newLeft: number, newTop: number) {
-		this.x = round(newLeft);
-		this.y = round(newTop);
-		this.fieldRef.style.transform = `translate(${this.x}px, ${this.y}px)`;
-	}
-
 	setDimensions(newWidth: number, newHeight: number) {
 		const [top, right, bottom, left] = getComputedStyle(
-			this.fieldRef
+			this.resizableRef
 		).borderWidth.match(/\d+/g);
 		const borderLeft = Number(left) ? left : 0;
 		const borderRight = Number(right) ? right : 0;
@@ -217,13 +128,19 @@ class ResizableField {
 		newHeight = round(newHeight) - borderHeight;
 		this.setWidth(newWidth);
 		this.setHeight(newHeight);
-		this.fieldRef.style.width = `${newWidth}px`;
-		this.fieldRef.style.height = `${newHeight}px`;
+		this.resizableRef.style.width = `${newWidth}px`;
+		this.resizableRef.style.height = `${newHeight}px`;
 	}
+
+	setPosition = (x: number, y: number) => {
+		this.x = round(x);
+		this.y = round(y);
+		this.resizableRef.style.transform = `translate(${this.x}px, ${this.y}px)`;
+	};
 
 	setHeight = (height: number) => (this.height = height);
 
 	setWidth = (width: number) => (this.width = width);
 }
 
-export default ResizableField;
+export default ResizablePlugin;

@@ -1,53 +1,57 @@
-import { map } from "lodash-es";
 import { action, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
-import { DraggableElementStore, ResizableField } from "./classes";
+import { DraggablePlugin, ResizablePlugin } from "./classes";
 import React from "react";
-import { TDraggableStore } from "./types";
-import { DraggableElement } from "./components";
+import { DraggableComponent, ResizableComponent } from "./components";
+import { TDraggablePlugin, TResizablePlugin } from "./types";
 
 class DragAndDropStore {
-	resizableFields: Array<ResizableField> = [];
-	draggableStores: Array<DraggableElementStore> = [];
+	draggablePlugin: TDraggablePlugin;
+	resizablePlugin: TResizablePlugin;
 
 	constructor() {
 		makeObservable(this, {
-			resizableFields: observable,
-			draggableStores: observable,
-			setDraggableFields: action,
-			setResizableFields: action,
+			draggablePlugin: observable,
+			resizablePlugin: observable,
+			setDraggablePlugin: action,
+			setResizablePlugin: action,
 		});
 	}
 
-	setResizableFields = (resizableFields: Array<ResizableField>) => {
-		this.resizableFields = [...resizableFields];
+	setDraggablePlugin = (draggablePlugin: TDraggablePlugin) => {
+		this.draggablePlugin = draggablePlugin;
 	};
 
-	createResizableField = () => {
-		const resizableField = new ResizableField();
-		this.setResizableFields([resizableField]);
+	setResizablePlugin = (resizablePlugin: TResizablePlugin) => {
+		this.resizablePlugin = resizablePlugin;
 	};
 
-	setDraggableFields = (draggableStores: Array<TDraggableStore>) => {
-		this.draggableStores = [...draggableStores];
+	createDraggableComponent = () => {
+		const draggablePlugin = new DraggablePlugin();
+		this.setDraggablePlugin(draggablePlugin);
 	};
 
-	createDraggableField = () => {
-		const draggableStore = new DraggableElementStore();
-		this.setDraggableFields([draggableStore]);
+	createResizableComponent = () => {
+		const resizablePlugin = new ResizablePlugin();
+		this.setResizablePlugin(resizablePlugin);
 	};
 }
 
 const store = new DragAndDropStore();
 const App = observer(() => {
-	const { createDraggableField, draggableStores } = store;
+	const {
+		createDraggableComponent,
+		draggablePlugin,
+		createResizableComponent,
+		resizablePlugin,
+	} = store;
 
 	return (
 		<React.Fragment>
-			{map(draggableStores, (store) => (
-				<DraggableElement {...store} />
-			))}
-			<button onClick={createDraggableField}>Create Field</button>
+			<DraggableComponent plugin={draggablePlugin} />
+			<ResizableComponent plugin={resizablePlugin} />
+			<button onClick={createDraggableComponent}>Create Draggable Field</button>
+			<button onClick={createResizableComponent}>Create Resizable Field</button>
 		</React.Fragment>
 	);
 });

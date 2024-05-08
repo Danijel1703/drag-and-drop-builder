@@ -3,7 +3,7 @@ body {
 	padding: 0;
 }
 
-.resizable-field {
+.resizable-component {
 	position: absolute;
 	width: 200px;
 	height: 200px;
@@ -11,7 +11,7 @@ body {
 	resize: both;
 }
 
-.draggable-field {
+.draggable-component {
 	position: absolute;
 	width: 200px;
 	height: 200px;

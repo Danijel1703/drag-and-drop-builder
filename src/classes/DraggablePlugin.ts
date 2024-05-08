@@ -1,7 +1,7 @@
 import { round } from "lodash-es";
-import { TDraggableStore } from "../types";
+import { TDraggablePlugin } from "../types";
 
-class DraggableElementStore implements TDraggableStore {
+class DraggablePlugin implements TDraggablePlugin {
 	x: number = 0;
 	y: number = 0;
 	isResizing: boolean = false;
@@ -20,7 +20,7 @@ class DraggableElementStore implements TDraggableStore {
 	};
 
 	onDrag = (event: MouseEvent) => {
-		// if (this.isResizing) return;
+		if (this.isResizing) return;
 		this.setPosition(
 			event.pageX - this.dragStartX,
 			event.pageY - this.dragStartY
@@ -41,4 +41,4 @@ class DraggableElementStore implements TDraggableStore {
 	};
 }
 
-export default DraggableElementStore;
+export default DraggablePlugin;

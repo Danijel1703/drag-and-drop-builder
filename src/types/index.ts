@@ -1,1 +1,2 @@
-export type { default as TDraggableStore } from "./TDraggableStore";
+export type { default as TDraggablePlugin } from "./TDraggablePlugin";
+export type { default as TResizablePlugin } from "./TResizablePlugin";
